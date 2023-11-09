@@ -1,45 +1,50 @@
 class Vehicle:
     def __init__(self, make, model, year):
-        self.make = make
-        self.model = model
-        self.year = year
-
-    def print_info(self):
-        print(f"Year={self.year}, Make={ self.make}, Model={self.model}",end=' ')
+        self.make=make
+        self.model= model
+        self.year= year
 
 class Car(Vehicle):
-    def __init__(self, make, model, year, doors):
+    def __init__(self, make, model, year, mileage, towing_capacity):
         super().__init__(make, model, year)
-        self.doors = doors
+        self.mileage =  mileage
+        self.towing_capacity= towing_capacity
 
-    def print_info(self):
-        super().print_info()
-        print(f"Doors={self.doors}" )
+    def calculate_mileage(self):
+        return self.mileage
+
+    def calculate_towing_capacity(self):
+        return self.towing_capacity
+
+    def __str__(self):
+        return f" Car made by {self.make}, model = {self.model}, year = {self.year}, mileage = {self.mileage} miles per liter, towing_capacity = {self.towing_capacity} kg"
 
 
-class Motorcycle(Vehicle):
-    def __init__(self, make, model, year, seats):
+class MotorCycle(Vehicle):
+    def __init__(self, make, model, year, mileage):
         super().__init__(make, model, year)
-        self.seats = seats
+        self.mileage = mileage
 
-    def print_info(self):
-        super().print_info()
-        print(f"Seats={self.seats}")
+    def calculate_mileage(self):
+        return self.mileage
+
+    def __str__(self):
+        return f" Motorcycle made by {self.make}, model = {self.model}, year = {self.year}, mileage = {self.mileage} miles per liter"
 
 class Truck(Vehicle):
-    def __init__(self, make, model, year,engine):
+    def __init__(self, make, model, year, towing_capacity):
         super().__init__(make, model, year)
-        self.engine = engine
+        self.towing_capacity = towing_capacity
 
-    def print_info(self):
-        super().print_info()
-        print(f"Engine={self.engine}")
+    def calculate_towing_capacity(self):
+        return self.towing_capacity
 
-car1 = Car("Toyota", "Camry", 2018, 4)
-car1.print_info()
+    def __str__(self):
+        return f" Truck made by {self.make}, model = {self.model}, year = {self.year},  towing_capacity = {self.towing_capacity} kg"
 
-motorcycle1 = Motorcycle("Honda", "Goldwing", 2018, 2)
-motorcycle1.print_info()
-
-truck1 = Truck("Ford", "F150", 2018, "V8")
-truck1.print_info()
+car= Car("Dacia", "Logan", 2002, 30, 500)
+print(car)
+motor = MotorCycle("Suzuky", "2", 2009, 100)
+print(motor)
+truck = Truck("MAN", "modelNou", 2020, 2000)
+print(truck)
