@@ -1,30 +1,12 @@
 import pygame
 import sys
-
-
-def ckeck_win(matrix, sign):
-    zeros = 0
-    for row in matrix:
-        zeros += row.count(0)
-        if row.count(sign) == 3:
-            return sign
-    for col in range(3):
-        if matrix[0][col] == sign and matrix[1][col] == sign and matrix[2][col] == sign:
-            return sign
-    if matrix[0][0] == sign and matrix[1][1] == sign and matrix[2][2] == sign:
-        return sign
-    if matrix[0][2] == sign and matrix[1][1] == sign and matrix[2][0] == sign:
-        return sign
-    if zeros == 0:
-        return 'Piece'
-    return False
-
+import random
 
 pygame.init()
+
 size_block = 100
 margin = 15
 width = height = size_block * 3 + margin * 4
-
 size_window = (width, height)
 screen = pygame.display.set_mode(size_window)
 pygame.display.set_caption("Tic-Tac-Toe")
@@ -33,9 +15,57 @@ black = (0, 0, 0)
 red = (255, 0, 0)
 green = (0, 255, 0)
 white = (255, 255, 255)
-matrix = [[0] * 3 for i in range(3)]
-query = 0
+font = pygame.font.SysFont('stxingkai', 35)
 game_over = False
+player_score = 0
+AI_score = 0
+
+def display_message(message_lines, color):
+    screen.fill(black)
+
+    for i, line in enumerate(message_lines):
+        text = font.render(line, True, color)
+        text_rect = text.get_rect(center=(width // 2, height // 3 + i * font.get_linesize()))
+        screen.blit(text, text_rect)
+
+    pygame.display.update()
+
+def check_win(matrix, sign):
+    for row in matrix:
+        if row.count(sign) == 3:
+            return True
+    for col in range(3):
+        if matrix[0][col] == sign and matrix[1][col] == sign and matrix[2][col] == sign:
+            return True
+    if matrix[0][0] == sign and matrix[1][1] == sign and matrix[2][2] == sign:
+        return True
+    if matrix[0][2] == sign and matrix[1][1] == sign and matrix[2][0] == sign:
+        return True
+    return False
+
+def check_draw(matrix):
+    return all(cell != 0 for row in matrix for cell in row)
+
+def computer_move(matrix):
+    empty_cells = [(row, col) for row in range(3) for col in range(3) if matrix[row][col] == 0]
+    return random.choice(empty_cells) if empty_cells else None
+
+def reset_game():
+    return [[0] * 3 for _ in range(3)]
+
+def draw_board():
+    for row in range(3):
+        for col in range(3):
+            x = col * size_block + (col + 1) * margin
+            y = row * size_block + (row + 1) * margin
+            pygame.draw.rect(screen, white, (x, y, size_block, size_block))
+            if matrix[row][col] == 'X':
+                pygame.draw.line(screen, red, (x + 20, y + 20), (size_block - 20 + x, size_block - 20 + y), 3)
+                pygame.draw.line(screen, red, (x + size_block - 20, y + 20), (x + 20, size_block - 20 + y), 3)
+            elif matrix[row][col] == 'O':
+                pygame.draw.circle(screen, green, (x + size_block // 2, y + size_block // 2), size_block // 3 - 4, 3)
+
+matrix = reset_game()
 
 while True:
     for event in pygame.event.get():
@@ -47,53 +77,44 @@ while True:
             col = x_mouse // (size_block + margin)
             row = y_mouse // (size_block + margin)
             if matrix[row][col] == 0:
-                if query % 2 == 0:
-                    matrix[row][col] = 'x'
+                matrix[row][col] = 'X'
+                if check_win(matrix, 'X'):
+                    winner = "You win"
+                    player_score += 1
+                    game_over = True
                 else:
-                    matrix[row][col] = 'o'
-                query += 1
-        elif event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
-            game_over = False
-            query = 0
-            matrix = [[0] * 3 for i in range(3)]
-            screen.fill(black)
+                    computer_move_result = computer_move(matrix)
+                    if computer_move_result:
+                        computer_row, computer_col = computer_move_result
+                        matrix[computer_row][computer_col] = 'O'
+                        if check_win(matrix, 'O'):
+                            winner = "AI wins"
+                            AI_score += 1
+                            game_over = True
+                    if check_draw(matrix):
+                        winner = "Draw"
+                        game_over = True
 
-    if not game_over:
-        for row in range(3):
-            for col in range(3):
-                if matrix[row][col] == 'x':
-                    color = red
-                elif matrix[row][col] == 'o':
-                    color = green
-                else:
-                    color = white
+    draw_board()
 
-                x = col * size_block + (col + 1) * margin
-                y = row * size_block + (row + 1) * margin
-                pygame.draw.rect(screen, color, (x, y, size_block, size_block))
-                if color == red:
-                    pygame.draw.line(screen, white, (x + 20, y + 20), (size_block - 20 + x, size_block - 20 + y), 3)
-                    pygame.draw.line(screen, white, (x + size_block - 20, y + 20), (x + 20, size_block - 20 + y), 3)
-                elif color == green:
-                    pygame.draw.circle(screen, white, (x + size_block // 2, y + size_block // 2), size_block // 3 - 4,
-                                       3)
-        if (query - 1) % 2 == 0:
-            game_over = ckeck_win(matrix, 'x')
-        else:
-            game_over = ckeck_win(matrix, 'o')
+    if game_over:
+        screen.fill(black)
+        display_message(
+            [f"{winner}!", f"YOU: {player_score}", f"AI: {AI_score}", "", "Do you want to play again?", "(Y/N)"],
+            white)
 
-        if game_over:
-            screen.fill(black)
-            font = pygame.font.SysFont('stxingkai', 80)
-            if game_over == 'x':
-                text = font.render("X wins", True, red)
-            elif game_over == 'o':
-                text = font.render("O wins", True, green)
-            else:
-                text = font.render("Draw", True, white)
-            text_rect = text.get_rect()
-            text_x = screen.get_width() / 2 - text_rect.width / 2
-            text_y = screen.get_height() / 2 - text_rect.height / 2
-            screen.blit(text, [text_x, text_y])
+        waiting_for_input = True
+        while waiting_for_input:
+            for event in pygame.event.get():
+                if event.type == pygame.KEYDOWN:
+                    if event.unicode.lower() == 'y':
+                        matrix = reset_game()
+                        game_over = False
+                        waiting_for_input = False
+                        winner = None
+                        screen.fill(black)
+                    elif event.unicode.lower() == 'n':
+                        pygame.quit()
+                        sys.exit()
 
     pygame.display.update()
