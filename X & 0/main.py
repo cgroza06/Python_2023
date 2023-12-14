@@ -19,6 +19,8 @@ font = pygame.font.SysFont('stxingkai', 35)
 game_over = False
 player_score = 0
 AI_score = 0
+winner = None
+
 
 def display_message(message_lines, color):
     screen.fill(black)
@@ -29,6 +31,28 @@ def display_message(message_lines, color):
         screen.blit(text, text_rect)
 
     pygame.display.update()
+
+
+def difficulty_selection():
+    screen.fill(black)
+    display_message(["Select Difficulty", "1. Easy", "3. Hard"], white)
+    pygame.display.update()
+    waiting_for_selection = True
+    while waiting_for_selection:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            elif event.type == pygame.KEYDOWN:
+                if event.unicode == '1':
+                    screen.fill(black)
+                    return 1
+                elif event.unicode == '3':
+                    screen.fill(black)
+                    return 3
+    screen.fill(black)
+    pygame.display.update()
+
 
 def check_win(matrix, sign):
     for row in matrix:
@@ -43,15 +67,65 @@ def check_win(matrix, sign):
         return True
     return False
 
+
 def check_draw(matrix):
     return all(cell != 0 for row in matrix for cell in row)
 
-def computer_move(matrix):
+
+def computer_random_move(matrix):
     empty_cells = [(row, col) for row in range(3) for col in range(3) if matrix[row][col] == 0]
     return random.choice(empty_cells) if empty_cells else None
 
+
+def computer_best_move(matrix):
+    # Verifica daca AI-ul castiga in urmatoarea miscare
+    for row in range(3):
+        for col in range(3):
+            if matrix[row][col] == 0:
+                matrix[row][col] = 'O'
+                if check_win(matrix, 'O'):
+                    return row, col
+                else:
+                    matrix[row][col] = 0
+
+    # Verifica daca jucatorul castiga in urmatoarea miscare
+    for row in range(3):
+        for col in range(3):
+            if matrix[row][col] == 0:
+                matrix[row][col] = 'X'
+                if check_win(matrix, 'X'):
+                    matrix[row][col] = 'O'
+                    return row, col
+                else:
+                    matrix[row][col] = 0
+
+    # Verifica daca poate ocupa unul din colturi
+    corners = [(0, 0), (0, 2), (2, 0), (2, 2)]
+    empty_corners = [(row, col) for row, col in corners if matrix[row][col] == 0]
+    if empty_corners:
+        return random.choice(empty_corners)
+
+    # Verifaca daca poate ocupa centrul
+    if matrix[1][1] == 0:
+        return 1, 1
+
+    # Ia orice colt
+    edges = [(0, 1), (1, 0), (1, 2), (2, 1)]
+    empty_edges = [(row, col) for row, col in edges if matrix[row][col] == 0]
+    if empty_edges:
+        return random.choice(empty_edges)
+
+
+def computer_move(matrix):
+    if difficulty_level == 1:
+        return computer_random_move(matrix)
+    elif difficulty_level == 3:
+        return computer_best_move(matrix)
+
+
 def reset_game():
     return [[0] * 3 for _ in range(3)]
+
 
 def draw_board():
     for row in range(3):
@@ -64,6 +138,10 @@ def draw_board():
                 pygame.draw.line(screen, red, (x + size_block - 20, y + 20), (x + 20, size_block - 20 + y), 3)
             elif matrix[row][col] == 'O':
                 pygame.draw.circle(screen, green, (x + size_block // 2, y + size_block // 2), size_block // 3 - 4, 3)
+
+
+difficulty_level = difficulty_selection()
+pygame.display.set_caption(f"Tic-Tac-Toe (Difficulty: {difficulty_level})")
 
 matrix = reset_game()
 
