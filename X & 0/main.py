@@ -19,11 +19,12 @@ font = pygame.font.SysFont('stxingkai', 35)
 game_over = False
 player_score = 0
 AI_score = 0
+difficulty_level = None
 winner = None
+flag = False
 
 
 def display_message(message_lines, color):
-    screen.fill(black)
 
     for i, line in enumerate(message_lines):
         text = font.render(line, True, color)
@@ -35,7 +36,7 @@ def display_message(message_lines, color):
 
 def difficulty_selection():
     screen.fill(black)
-    display_message(["Select Difficulty", "1. Easy", "3. Hard"], white)
+    display_message(["Select Difficulty", "1. Easy", "2. Medium", "3. Hard"], white)
     pygame.display.update()
     waiting_for_selection = True
     while waiting_for_selection:
@@ -47,6 +48,9 @@ def difficulty_selection():
                 if event.unicode == '1':
                     screen.fill(black)
                     return 1
+                elif event.unicode == '2':
+                    screen.fill(black)
+                    return 2
                 elif event.unicode == '3':
                     screen.fill(black)
                     return 3
@@ -116,11 +120,17 @@ def computer_best_move(matrix):
         return random.choice(empty_edges)
 
 
-def computer_move(matrix):
+def computer_move(matrix,flag = False):
     if difficulty_level == 1:
-        return computer_random_move(matrix)
+        return computer_random_move(matrix),flag
     elif difficulty_level == 3:
-        return computer_best_move(matrix)
+        return computer_best_move(matrix),flag
+    elif difficulty_level == 2 and flag == False:
+        flag = True
+        return computer_random_move(matrix),flag
+    else:
+        flag = False
+        return computer_best_move(matrix),flag
 
 
 def reset_game():
@@ -161,7 +171,7 @@ while True:
                     player_score += 1
                     game_over = True
                 else:
-                    computer_move_result = computer_move(matrix)
+                    computer_move_result,flag = computer_move(matrix,flag)
                     if computer_move_result:
                         computer_row, computer_col = computer_move_result
                         matrix[computer_row][computer_col] = 'O'
